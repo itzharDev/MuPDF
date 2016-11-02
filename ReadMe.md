@@ -30,7 +30,7 @@ dependencies {
 ```
 `AndroidManifest.xml:`
 
-**add this to your <application> tag:**
+**add this to your `application` tag:**
 
 ```java
 tools:replace="android:icon,android:label"
