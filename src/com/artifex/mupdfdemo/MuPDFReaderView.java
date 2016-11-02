@@ -230,7 +230,7 @@ public class MuPDFReaderView extends ReaderView {
 			public void run() {
 				applyToChildren(new ReaderView.ViewMapper() {
 					@Override
-					void applyToView(View view) {
+					public void applyToView(View view) {
 						((MuPDFView) view).update();
 					}
 				});
