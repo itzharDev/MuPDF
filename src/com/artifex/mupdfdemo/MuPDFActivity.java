@@ -1,5 +1,7 @@
 package com.artifex.mupdfdemo;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -14,6 +16,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -47,12 +50,13 @@ class ThreadPerTaskExecutor implements Executor {
 		new Thread(r).start();
 	}
 }
-
+@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupport
 {
 	/* The core rendering instance */
-	enum TopBarMode {Main, Search, Annot, Delete, More, Accept};
-	enum AcceptMode {Highlight, Underline, StrikeOut, Ink, CopyText};
+	enum TopBarMode {Main, Search, Annot, Delete, More, Accept}
+
+	enum AcceptMode {Highlight, Underline, StrikeOut, Ink, CopyText}
 
 	private final int    OUTLINE_REQUEST=0;
 	private final int    PRINT_REQUEST=1;
@@ -220,9 +224,7 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 	private MuPDFCore openFile(String path)
 	{
 		int lastSlashPos = path.lastIndexOf('/');
-		mFileName = new String(lastSlashPos == -1
-					? path
-					: path.substring(lastSlashPos+1));
+		mFileName = lastSlashPos == -1 ? path : path.substring(lastSlashPos + 1);
 		System.out.println("Trying to open " + path);
 		try
 		{
@@ -318,13 +320,12 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 						// I'm hoping that this case below is no longer needed...but it's
 						// hard to test as the file manager seems to have changed in 4.x.
 						try {
-							Cursor cursor = getContentResolver().query(uri, new String[]{"_data"}, null, null, null);
-							if (cursor.moveToFirst()) {
+							@SuppressLint("Recycle") Cursor cursor = getContentResolver().query(uri, new String[]{"_data"}, null, null, null);
+							if (cursor != null && cursor.moveToFirst()) {
 								String str = cursor.getString(0);
 								if (str == null) {
 									reason = "Couldn't parse data in intent";
-								}
-								else {
+								} else {
 									uri = Uri.parse(str);
 								}
 							}
@@ -454,13 +455,13 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 		// Now create the UI.
 		// First create the document view
 		mDocView = new MuPDFReaderView(this) {
+			@SuppressLint("DefaultLocale")
 			@Override
 			protected void onMoveToChild(int i) {
 				if (core == null)
 					return;
 
-				mPageNumberView.setText(String.format("%d / %d", i + 1,
-						core.countPages()));
+				mPageNumberView.setText(String.format("%d / %d", i + 1, core.countPages()));
 				mPageSlider.setMax((core.countPages() - 1) * mPageSliderRes);
 				mPageSlider.setProgress(i * mPageSliderRes);
 				super.onMoveToChild(i);
@@ -746,7 +747,7 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 			SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
 			SharedPreferences.Editor edit = prefs.edit();
 			edit.putInt("page"+mFileName, mDocView.getDisplayedViewIndex());
-			edit.commit();
+			edit.apply();
 		}
 
 		if (!mButtonsVisible)
@@ -770,7 +771,7 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 			SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
 			SharedPreferences.Editor edit = prefs.edit();
 			edit.putInt("page"+mFileName, mDocView.getDisplayedViewIndex());
-			edit.commit();
+			edit.apply();
 		}
 	}
 
@@ -900,6 +901,7 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 		}
 	}
 
+	@SuppressLint("DefaultLocale")
 	private void updatePageNumView(int index) {
 		if (core == null)
 			return;
@@ -933,7 +935,7 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 
 		int currentApiVersion = android.os.Build.VERSION.SDK_INT;
 		if (currentApiVersion >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-			SafeAnimatorInflater safe = new SafeAnimatorInflater((Activity)this, R.animator.info, (View)mInfoView);
+			SafeAnimatorInflater safe = new SafeAnimatorInflater(this, R.animator.info, mInfoView);
 		} else {
 			mInfoView.setVisibility(View.VISIBLE);
 			mHandler.postDelayed(new Runnable() {
@@ -944,6 +946,7 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 		}
 	}
 
+	@SuppressLint("InflateParams")
 	private void makeButtonsView() {
 		mButtonsView = getLayoutInflater().inflate(R.layout.buttons,null);
 		mFilenameView = (TextView)mButtonsView.findViewById(R.id.docNameText);
@@ -968,7 +971,7 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 		mInfoView.setVisibility(View.INVISIBLE);
 
 		mPageSlider.setVisibility(View.INVISIBLE);
-		if (!core.gprfSupported()) {
+		if (!MuPDFCore.gprfSupported()) {
 			mProofButton.setVisibility(View.INVISIBLE);
 		}
 		mSepsButton.setVisibility(View.INVISIBLE);
@@ -1046,6 +1049,7 @@ public class MuPDFActivity extends Activity implements FilePicker.FilePickerSupp
 
 		popup.show();
 	}
+
 
 	public void OnSepsButtonClick(final View v)
 	{
