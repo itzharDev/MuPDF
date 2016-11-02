@@ -14,7 +14,7 @@ usage:
 settings.gradle:
 
     include ':mupdf'
-    project(':mupdf').projectDir = new File('../../../Desktop/mupdf/platform/android/viewer')
+    project(':mupdf').projectDir = new File('../path/to/MuPDF')
 
 
 build.gradle:
@@ -32,3 +32,10 @@ Java:
     intent.setAction(Intent.ACTION_VIEW);
     intent.setData(contentUri);
     startActivity(intent);
+    
+    
+AndroidManifest.xml:
+
+    add this to your <application> tag:
+    
+    tools:replace="android:icon,android:label"
